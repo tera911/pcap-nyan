@@ -50,12 +50,17 @@ export default class SourceManager {
     }
     
     createSourceCircle(sourceId, sourceName, ipAddress = null) {
-        // Calculate position based on IP address's 4th octet
-        let x = 400;
-        let y = 50;
+        // Position sources in a rotating circle
+        const centerX = 400;
+        const centerY = 50;
+        const radiusX = 300; // Horizontal radius
+        const radiusY = 35;  // Vertical radius for ellipse
+        
         let octet = '';
         
-        // console.log(`Creating source circle: ${sourceName}, IP: ${ipAddress}, ID: ${sourceId}`);
+        // Calculate initial angle based on source count
+        const sourceIndex = this.sourceCircles.size;
+        let baseAngle = (sourceIndex * (Math.PI * 2 / 8)); // Max 8 sources evenly distributed
         
         if (ipAddress && ipAddress !== 'unknown' && ipAddress !== null) {
             const octets = ipAddress.split('.');
@@ -63,26 +68,28 @@ export default class SourceManager {
                 octet = octets[3];
                 const fourthOctet = parseInt(octet);
                 if (!isNaN(fourthOctet)) {
-                    // Position based on 4th octet (0-255) across screen width
-                    x = 50 + (fourthOctet / 255) * 700;
-                    // console.log(`Positioned ${sourceName} at x=${x} based on octet ${fourthOctet}`);
+                    // Add variation based on IP
+                    baseAngle += (fourthOctet / 255) * (Math.PI / 4);
                 }
             }
         } else if (sourceId) {
-            // Use sourceId hash as fallback for consistent positioning
+            // Use sourceId hash for angle
             let hash = 0;
             for (let i = 0; i < sourceId.length; i++) {
                 hash = ((hash << 5) - hash) + sourceId.charCodeAt(i);
-                hash = hash & hash; // Convert to 32bit integer
+                hash = hash & hash;
             }
-            x = 50 + (Math.abs(hash) % 700);
-            // console.log(`Positioned ${sourceName} at x=${x} based on ID hash`);
-        } else {
-            // Final fallback: random position
-            x = 100 + Math.random() * 600;
+            baseAngle += (Math.abs(hash) % 360) * (Math.PI / 180);
         }
         
-        y = 45 + Math.random() * 10;
+        // Store the base angle for rotation
+        const rotationSpeed = 0.0003; // Rotation speed
+        const currentRotation = (this.scene.time.now * rotationSpeed) % (Math.PI * 2);
+        const angle = baseAngle + currentRotation;
+        
+        // Calculate position on ellipse
+        const x = centerX + Math.cos(angle) * radiusX;
+        const y = centerY + Math.sin(angle) * radiusY;
         
         // Get color for this source
         const color = this.getSourceColor(sourceName);
@@ -144,7 +151,7 @@ export default class SourceManager {
         // Add all elements to container
         container.add([glow, circle, octetText, hostnameText, label]);
         
-        // Store reference
+        // Store reference with rotation info
         this.sourceCircles.set(sourceId, {
             container: container,
             circle: circle,
@@ -155,7 +162,12 @@ export default class SourceManager {
             sourceName: sourceName,
             packetCount: 0,
             x: x,
-            y: y
+            y: y,
+            baseAngle: baseAngle, // Store base angle for rotation
+            centerX: 400,
+            centerY: 50,
+            radiusX: 300,
+            radiusY: 35
         });
         
         // Connection effect (no flash)
@@ -204,17 +216,49 @@ export default class SourceManager {
     getSourcePosition(sourceId) {
         const circle = this.sourceCircles.get(sourceId);
         if (circle) {
-            return { x: circle.x, y: circle.y };
+            // Return current rotated position
+            const rotationSpeed = 0.0003;
+            const currentRotation = (this.scene.time.now * rotationSpeed) % (Math.PI * 2);
+            const angle = circle.baseAngle + currentRotation;
+            
+            const x = circle.centerX + Math.cos(angle) * circle.radiusX;
+            const y = circle.centerY + Math.sin(angle) * circle.radiusY;
+            
+            return { x, y };
         }
         
         // Try to match by source name if ID doesn't match
         for (const [id, c] of this.sourceCircles.entries()) {
             if (c.sourceName === sourceId || id === sourceId) {
-                return { x: c.x, y: c.y };
+                const rotationSpeed = 0.0003;
+                const currentRotation = (this.scene.time.now * rotationSpeed) % (Math.PI * 2);
+                const angle = c.baseAngle + currentRotation;
+                
+                const x = c.centerX + Math.cos(angle) * c.radiusX;
+                const y = c.centerY + Math.sin(angle) * c.radiusY;
+                
+                return { x, y };
             }
         }
         
         return null;
+    }
+    
+    updateRotation() {
+        // Update positions of all source circles
+        const rotationSpeed = 0.0003;
+        const currentRotation = (this.scene.time.now * rotationSpeed) % (Math.PI * 2);
+        
+        this.sourceCircles.forEach((circle) => {
+            const angle = circle.baseAngle + currentRotation;
+            const x = circle.centerX + Math.cos(angle) * circle.radiusX;
+            const y = circle.centerY + Math.sin(angle) * circle.radiusY;
+            
+            circle.container.x = x;
+            circle.container.y = y;
+            circle.x = x;
+            circle.y = y;
+        });
     }
     
     createBulletSpawnEffect(x, y, color) {

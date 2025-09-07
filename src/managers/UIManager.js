@@ -15,6 +15,7 @@ export default class UIManager {
         this.startInstructionText = null;
         this.godModeText = null;
         this.pauseScreenText = null;
+        this.livesText = null;  // Lives display
         
         // Packet logs
         this.packetLogs = [];
@@ -71,6 +72,15 @@ export default class UIManager {
             padding: { x: 8, y: 4 }
         });
         this.grazeText.setAlpha(0.8);
+        
+        // Lives display
+        this.livesText = this.scene.add.text(16, 180, 'Lives: ❤️❤️❤️', {
+            fontSize: '20px',
+            color: '#FF6666',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            padding: { x: 8, y: 4 }
+        });
+        this.livesText.setAlpha(0.9);
         
         // Player Level display - moved down and semi-transparent
         this.difficultyText = this.scene.add.text(400, 100, 'Lv.1', {
@@ -311,6 +321,30 @@ export default class UIManager {
         this.grazeText.setText(`Graze: ${count}`);
     }
     
+    updateLives(lives) {
+        if (this.livesText) {
+            let hearts = '';
+            for (let i = 0; i < lives; i++) {
+                hearts += '❤️';
+            }
+            // Just show "Lives:" when no lives remain
+            if (lives <= 0) {
+                this.livesText.setText('Lives:');
+            } else {
+                this.livesText.setText(`Lives: ${hearts}`);
+            }
+            
+            // Flash effect when lives change
+            this.scene.tweens.add({
+                targets: this.livesText,
+                alpha: 0.3,
+                duration: 100,
+                yoyo: true,
+                repeat: 2
+            });
+        }
+    }
+    
     updateDifficulty(level) {
         this.difficultyText.setText(`Lv.${level}`);
     }
@@ -534,6 +568,7 @@ export default class UIManager {
         this.updateScore(0);
         this.updateTime(0);
         this.updateGraze(0);
+        this.updateLives(3);
         this.updateDifficulty(1);
         this.updatePacketInfo(0);
         

@@ -17,6 +17,13 @@ export default class PlayerManager {
         this.playerLevel = 1;
         this.godMode = false;
         
+        // Health system
+        this.maxLives = 3;
+        this.currentLives = 3;
+        this.invincible = false;
+        this.invincibilityTimer = 0;
+        this.invincibilityDuration = 2000; // 2 seconds of invincibility after hit
+        
         // Combo system
         this.grazeCombo = 0;
         this.maxCombo = 0;
@@ -90,6 +97,9 @@ export default class PlayerManager {
         const slowSpeed = 80;  // Slow mode for precise dodging
         const speed = shiftKey.isDown ? slowSpeed : baseSpeed;
         
+        // ホストサークルのY座標 + 50px の制限
+        const minY = 100;  // Host circles are at y=50, so minimum player Y is 100
+        
         if (cursors.left.isDown) {
             this.nyancat.body.setVelocityX(-speed);
         } else if (cursors.right.isDown) {
@@ -99,11 +109,31 @@ export default class PlayerManager {
         }
         
         if (cursors.up.isDown) {
-            this.nyancat.body.setVelocityY(-speed);
+            // 上方向の移動を制限
+            if (this.nyancat.y > minY) {
+                this.nyancat.body.setVelocityY(-speed);
+            } else {
+                this.nyancat.body.setVelocityY(0);
+                this.nyancat.y = minY;  // 境界で停止
+            }
         } else if (cursors.down.isDown) {
             this.nyancat.body.setVelocityY(speed);
         } else {
             this.nyancat.body.setVelocityY(0);
+        }
+        
+        // Update invincibility timer
+        if (this.invincible) {
+            this.invincibilityTimer -= this.scene.game.loop.delta;
+            if (this.invincibilityTimer <= 0) {
+                this.invincible = false;
+                this.nyancat.clearTint();
+                this.nyancat.setAlpha(1);
+            } else {
+                // Flashing effect during invincibility
+                const flash = Math.sin(this.scene.time.now * 0.02) > 0;
+                this.nyancat.setAlpha(flash ? 0.5 : 1);
+            }
         }
         
         // Update hitbox indicator position
@@ -280,6 +310,12 @@ export default class PlayerManager {
         this.playerLevel = 1;
         this.godMode = false;
         
+        // Reset lives and invincibility
+        this.currentLives = 3;
+        this.invincible = false;
+        this.invincibilityTimer = 0;
+        this.nyancat.setAlpha(1);
+        
         // Reset combo
         this.grazeCombo = 0;
         this.maxCombo = 0;
@@ -296,5 +332,35 @@ export default class PlayerManager {
     
     getPosition() {
         return { x: this.nyancat.x, y: this.nyancat.y };
+    }
+    
+    takeDamage() {
+        if (this.invincible || this.godMode) return false;
+        
+        this.currentLives--;
+        
+        if (this.currentLives <= 0) {
+            // Player is dead
+            this.currentLives = 0; // Ensure it doesn't go negative
+            return true;
+        }
+        
+        // Still has lives - start invincibility
+        this.invincible = true;
+        this.invincibilityTimer = this.invincibilityDuration;
+        this.nyancat.setTint(0xFF6666); // Red tint when hit
+        
+        // Create damage effect
+        this.scene.effectsManager.createDeathEffect(this.nyancat.x, this.nyancat.y);
+        
+        return false; // Not dead yet
+    }
+    
+    getLives() {
+        return this.currentLives;
+    }
+    
+    isInvincible() {
+        return this.invincible || this.godMode;
     }
 }

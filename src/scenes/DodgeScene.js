@@ -86,7 +86,7 @@ export default class DodgeScene extends Phaser.Scene {
             this.playerManager.nyancat,
             this.bulletManager.bulletGroup,
             (player, bullet) => {
-                if (this.gameStarted && !this.gameOver && !this.playerManager.godMode) {
+                if (this.gameStarted && !this.gameOver && !this.playerManager.isInvincible()) {
                     this.hitPlayer();
                 }
             },
@@ -145,6 +145,9 @@ export default class DodgeScene extends Phaser.Scene {
     }
     
     update() {
+        // Update source rotation
+        this.sourceManager.updateRotation();
+        
         // Check for pause toggle (works during game)
         if (this.gameStarted && !this.gameOver && Phaser.Input.Keyboard.JustDown(this.pKey)) {
             this.togglePause();
@@ -309,25 +312,40 @@ export default class DodgeScene extends Phaser.Scene {
     hitPlayer() {
         if (this.gameOver) return;
         
-        this.gameOver = true;
+        const isDead = this.playerManager.takeDamage();
         
-        // Death effect
-        const pos = this.playerManager.getPosition();
-        this.effectsManager.createDeathEffect(pos.x, pos.y);
-        
-        // Calculate final score
-        const survivalBonus = this.survivalTime * 100;
-        const grazeBonus = this.bulletManager.grazeCount * 50;
-        const comboBonus = this.playerManager.maxCombo * 100;
-        const finalScore = this.score + survivalBonus + grazeBonus + comboBonus;
-        
-        // Show game over
-        this.uiManager.showGameOver(finalScore);
-        
-        // Log game over
-        this.uiManager.addSystemLog(
-            `GAME OVER! Score: ${finalScore} (Dodged: ${this.score} + Time: ${survivalBonus} + Graze: ${grazeBonus} + Combo: ${comboBonus})`
-        );
+        if (isDead) {
+            this.gameOver = true;
+            
+            // Stop player movement immediately
+            this.playerManager.nyancat.body.setVelocity(0, 0);
+            
+            // Update lives display to 0
+            this.uiManager.updateLives(0);
+            
+            // Death effect
+            const pos = this.playerManager.getPosition();
+            this.effectsManager.createDeathEffect(pos.x, pos.y);
+            
+            // Calculate final score
+            const survivalBonus = this.survivalTime * 100;
+            const grazeBonus = this.bulletManager.grazeCount * 50;
+            const comboBonus = this.playerManager.maxCombo * 100;
+            const finalScore = this.score + survivalBonus + grazeBonus + comboBonus;
+            
+            // Show game over
+            this.uiManager.showGameOver(finalScore);
+            
+            // Log game over
+            this.uiManager.addSystemLog(
+                `GAME OVER! Score: ${finalScore} (Dodged: ${this.score} + Time: ${survivalBonus} + Graze: ${grazeBonus} + Combo: ${comboBonus})`
+            );
+        } else {
+            // Player was hit but still has lives
+            const livesLeft = this.playerManager.getLives();
+            this.uiManager.updateLives(livesLeft);
+            this.uiManager.addSystemLog(`HIT! ${livesLeft} ${livesLeft === 1 ? 'life' : 'lives'} remaining`);
+        }
     }
     
     toggleGodMode() {
@@ -392,6 +410,9 @@ export default class DodgeScene extends Phaser.Scene {
         
         // Hide start screen
         this.uiManager.hideStartScreen();
+        
+        // Initialize lives display
+        this.uiManager.updateLives(3);
         
         // Start effect
         this.effectsManager.createGameStartEffect();
