@@ -55,7 +55,7 @@ export default class SourceManager {
         let y = 50;
         let octet = '';
         
-        console.log(`Creating source circle: ${sourceName}, IP: ${ipAddress}, ID: ${sourceId}`);
+        // console.log(`Creating source circle: ${sourceName}, IP: ${ipAddress}, ID: ${sourceId}`);
         
         if (ipAddress && ipAddress !== 'unknown' && ipAddress !== null) {
             const octets = ipAddress.split('.');
@@ -65,7 +65,7 @@ export default class SourceManager {
                 if (!isNaN(fourthOctet)) {
                     // Position based on 4th octet (0-255) across screen width
                     x = 50 + (fourthOctet / 255) * 700;
-                    console.log(`Positioned ${sourceName} at x=${x} based on octet ${fourthOctet}`);
+                    // console.log(`Positioned ${sourceName} at x=${x} based on octet ${fourthOctet}`);
                 }
             }
         } else if (sourceId) {
@@ -76,7 +76,7 @@ export default class SourceManager {
                 hash = hash & hash; // Convert to 32bit integer
             }
             x = 50 + (Math.abs(hash) % 700);
-            console.log(`Positioned ${sourceName} at x=${x} based on ID hash`);
+            // console.log(`Positioned ${sourceName} at x=${x} based on ID hash`);
         } else {
             // Final fallback: random position
             x = 100 + Math.random() * 600;

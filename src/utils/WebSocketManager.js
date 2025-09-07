@@ -31,11 +31,11 @@ export default class WebSocketManager {
 
     connect() {
         const hubUrl = this.getHubUrl();
-        console.log(`Connecting to Hub: ${hubUrl}`);
+        // console.log(`Connecting to Hub: ${hubUrl}`);
         this.ws = new WebSocket(hubUrl);
         
         this.ws.onopen = () => {
-            console.log('WebSocket connected to Hub');
+            // console.log('WebSocket connected to Hub');
             this.updateStatus('connected');
             
             // Authenticate as game client
@@ -52,7 +52,7 @@ export default class WebSocketManager {
             switch(data.type) {
                 case 'auth_success':
                     this.playerId = data.player_id;
-                    console.log(`Authenticated as player: ${this.playerId}`);
+                    // console.log(`Authenticated as player: ${this.playerId}`);
                     break;
                     
                 case 'game_state':
@@ -105,7 +105,7 @@ export default class WebSocketManager {
                                     if (ipAddress && !ipAddress.includes('.')) {
                                         // Convert single number to full IP
                                         ipAddress = `192.168.1.${ipAddress}`;
-                                        console.log(`Converted octet ${source.ip} to full IP: ${ipAddress}`);
+                                        // console.log(`Converted octet ${source.ip} to full IP: ${ipAddress}`);
                                     }
                                     
                                     // If still no valid IP, generate a test IP based on index for positioning
@@ -113,10 +113,10 @@ export default class WebSocketManager {
                                         // Generate test IP like 192.168.1.X where X varies
                                         const testOctet = 10 + (sourceIndex * 50); // Spread sources across screen
                                         ipAddress = `192.168.1.${testOctet % 256}`;
-                                        console.log(`Generated test IP for ${id}: ${ipAddress}`);
+                                        // console.log(`Generated test IP for ${id}: ${ipAddress}`);
                                     }
                                     
-                                    console.log(`Source ${id}: IP=${ipAddress}, raw data:`, source);
+                                    // console.log(`Source ${id}: IP=${ipAddress}, raw data:`, source);
                                     
                                     active_sources.push({
                                         source_id: id,
@@ -157,7 +157,7 @@ export default class WebSocketManager {
         };
         
         this.ws.onclose = () => {
-            console.log('WebSocket disconnected');
+            // console.log('WebSocket disconnected');
             this.updateStatus('disconnected');
             if (this.callbacks.onDisconnected) {
                 this.callbacks.onDisconnected();
@@ -276,12 +276,12 @@ export default class WebSocketManager {
     // Legacy compatibility methods
     startCapture() {
         // No longer needed - capture is handled by separate clients
-        console.log('Capture is now handled by packet_capture_client.py');
+        // console.log('Capture is now handled by packet_capture_client.py');
     }
     
     stopCapture() {
         // No longer needed
-        console.log('Capture is now handled by packet_capture_client.py');
+        // console.log('Capture is now handled by packet_capture_client.py');
     }
     
     requestMap() {

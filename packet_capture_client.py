@@ -120,7 +120,7 @@ class PacketCaptureClient:
                 if time_since_last < self.connection_rate_limit:
                     self.skipped_packets += 1
                     if self.skipped_packets % 100 == 0:  # Log every 100 skipped packets
-                        print(f"Rate limited: Skipped {self.skipped_packets} packets (last: {conn_id[:30]}...)")
+                        pass  # print(f"Rate limited: Skipped {self.skipped_packets} packets (last: {conn_id[:30]}...)")
                     return  # Rate limited
             
             # Update last packet time for this connection
@@ -143,7 +143,7 @@ class PacketCaptureClient:
             else:
                 interface = None  # Windows - auto
         
-        print(f"Starting packet capture on interface: {interface or 'auto'}")
+        # print(f"Starting packet capture on interface: {interface or 'auto'}")
         
         try:
             sniff(iface=interface, prn=self.packet_handler, store=False)
@@ -155,7 +155,7 @@ class PacketCaptureClient:
     async def connect_to_hub(self) -> bool:
         """Hubサーバーに接続"""
         try:
-            print(f"Connecting to Hub: {self.hub_url}")
+            # print(f"Connecting to Hub: {self.hub_url}")
             self.ws = await websockets.connect(self.hub_url)
             
             # 認証メッセージ送信
@@ -167,7 +167,7 @@ class PacketCaptureClient:
             }
             await self.ws.send(json.dumps(auth_message))
             
-            print(f"Connected to Hub as '{self.source_name}'")
+            # print(f"Connected to Hub as '{self.source_name}'")
             self.reconnect_attempts = 0
             return True
             
@@ -187,8 +187,8 @@ class PacketCaptureClient:
                 # Show statistics periodically
                 if current_time - last_stats_time > stats_interval:
                     active_connections = len(self.connection_cache)
-                    print(f"[Stats] Captured: {self.packet_count}, Skipped: {self.skipped_packets}, "
-                          f"Active connections: {active_connections}, Buffer: {len(self.packet_buffer)}")
+                    pass  # print(f"[Stats] Captured: {self.packet_count}, Skipped: {self.skipped_packets}, "
+                          # f"Active connections: {active_connections}, Buffer: {len(self.packet_buffer)}")
                     last_stats_time = current_time
                 
                 # 200ms毎または30パケット溜まったら送信（間隔を延ばして分散）
@@ -248,24 +248,24 @@ class PacketCaptureClient:
                             
                             # Debug: Show connection diversity in batch
                             unique_connections = len(sent_connections)
-                            print(f"\n[Batch] Sent {len(packets_to_send)} packets from {unique_connections} unique connections")
-                            
-                            # Show top connections if mostly from same source
-                            if unique_connections < len(packets_to_send) / 2:
-                                print(f"  Warning: Low connection diversity ({unique_connections}/{len(packets_to_send)})")
-                                # Show first few connections for debugging
-                                for i, conn in enumerate(list(sent_connections.keys())[:3]):
-                                    parts = conn.split('-')
-                                    if len(parts) >= 2:
-                                        print(f"    - {parts[0]} -> {parts[1]}")
+                            pass  # print(f"\n[Batch] Sent {len(packets_to_send)} packets from {unique_connections} unique connections")
+                            # 
+                            # # Show top connections if mostly from same source
+                            # if unique_connections < len(packets_to_send) / 2:
+                            #     print(f"  Warning: Low connection diversity ({unique_connections}/{len(packets_to_send)})")
+                            #     # Show first few connections for debugging
+                            #     for i, conn in enumerate(list(sent_connections.keys())[:3]):
+                            #         parts = conn.split('-')
+                            #         if len(parts) >= 2:
+                            #             print(f"    - {parts[0]} -> {parts[1]}")
                 
                 await asyncio.sleep(0.05)  # 50ms間隔でチェック
                 
             except websockets.exceptions.ConnectionClosed:
-                print("\nConnection to Hub lost. Reconnecting...")
+                pass  # print("\nConnection to Hub lost. Reconnecting...")
                 await self.reconnect()
             except Exception as e:
-                print(f"\nError sending packets: {e}")
+                pass  # print(f"\nError sending packets: {e}")
                 await asyncio.sleep(1)
     
     async def receive_messages(self):
@@ -278,42 +278,42 @@ class PacketCaptureClient:
                     
                     if data.get('type') == 'capture_stats':
                         # 統計情報表示（別行で）
-                        print(f"\n[Stats] Players: {data.get('connected_players', 0)} | "
-                              f"Active: {data.get('active_players', 0)} | "
-                              f"Total Bullets: {data.get('total_bullets', 0)} | "
-                              f"Your Bullets: {data.get('bullets_from_source', 0)}")
-                        # カーソルを元の位置に戻す
-                        print(f"\rPackets captured: {self.packet_count}", end='')
+                        pass  # print(f"\n[Stats] Players: {data.get('connected_players', 0)} | "
+                              # f"Active: {data.get('active_players', 0)} | "
+                              # f"Total Bullets: {data.get('total_bullets', 0)} | "
+                              # f"Your Bullets: {data.get('bullets_from_source', 0)}")
+                        # # カーソルを元の位置に戻す
+                        # print(f"\rPackets captured: {self.packet_count}", end='')
                 else:
                     await asyncio.sleep(1)
                     
             except websockets.exceptions.ConnectionClosed:
                 await asyncio.sleep(1)
             except Exception as e:
-                print(f"\nError receiving message: {e}")
+                pass  # print(f"\nError receiving message: {e}")
                 await asyncio.sleep(1)
     
     async def reconnect(self):
         """再接続処理"""
         if self.reconnect_attempts >= self.max_reconnect_attempts:
-            print("\nMax reconnection attempts reached. Exiting...")
+            pass  # print("\nMax reconnection attempts reached. Exiting...")
             return False
         
         self.reconnect_attempts += 1
         wait_time = min(2 ** self.reconnect_attempts, 30)  # 指数バックオフ（最大30秒）
         
-        print(f"\nReconnection attempt {self.reconnect_attempts}/{self.max_reconnect_attempts} in {wait_time}s...")
+        # print(f"\nReconnection attempt {self.reconnect_attempts}/{self.max_reconnect_attempts} in {wait_time}s...")
         await asyncio.sleep(wait_time)
         
         if await self.connect_to_hub():
-            print("Reconnected successfully!")
+            pass  # print("Reconnected successfully!")
             return True
         return False
     
     def discover_hub(self, timeout: float = 5.0) -> Optional[Tuple[str, int]]:
         """マルチキャストでHubを検索"""
         try:
-            print(f"Searching for Hub server... (timeout: {timeout}s)")
+            # print(f"Searching for Hub server... (timeout: {timeout}s)")
             
             # UDPソケット作成
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
