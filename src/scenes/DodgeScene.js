@@ -160,9 +160,7 @@ export default class DodgeScene extends Phaser.Scene {
             if (this.input.keyboard.addKey('SPACE').isDown) {
                 this.startGame();
             }
-            // Still allow movement in start state
-            this.playerManager.updateMovement(this.cursors, this.shiftKey);
-            // Update bullets even in start state (visual only)
+            // Update bullets even in start state (visual only, no collision)
             this.updateBullets();
             return;
         }
@@ -185,8 +183,10 @@ export default class DodgeScene extends Phaser.Scene {
             this.uiManager.updateTime(this.survivalTime);
         }
         
-        // Handle player movement
-        this.playerManager.updateMovement(this.cursors, this.shiftKey);
+        // Handle player movement (only if game is started and not over)
+        if (this.gameStarted && !this.gameOver) {
+            this.playerManager.updateMovement(this.cursors, this.shiftKey);
+        }
         
         // Check combo timeout
         this.playerManager.checkComboTimeout();
@@ -221,13 +221,13 @@ export default class DodgeScene extends Phaser.Scene {
         
         // Dynamic packet interval based on player level (shorter interval = more packets)
         const playerLevel = this.playerManager.playerLevel;
-        const levelInterval = Math.max(200, 1000 - (playerLevel * 50)); // 1000ms at level 1, down to 200ms at higher levels
+        const levelInterval = Math.max(200, 1000 - (playerLevel * 100)); // 1000ms at level 1, down to 200ms at higher levels
         
         // Check if enough time has passed since last packet processing
         if (currentTime - this.lastPacketTime < levelInterval) return;
         
         // Limit packets based on level (more packets at higher levels)
-        const maxPackets = Math.min(3 + Math.floor(playerLevel * 1.2), 15); // Start with fewer packets, max 15 for balance
+        const maxPackets = Math.min(5 + Math.floor(playerLevel * 1.5), 20); // Start with 5, max 20 for intense gameplay
         const packetsToProcess = packetData.slice(0, maxPackets);
         
         // Process each packet
@@ -264,8 +264,8 @@ export default class DodgeScene extends Phaser.Scene {
                 packet.spawn_y = sourcePos.y;
             }
             
-            // Create bullet with player level as difficulty
-            this.bulletManager.createPacketBullet(packet, this.playerManager.playerLevel, null);
+            // Create bullet without speed scaling (difficulty = 1)
+            this.bulletManager.createPacketBullet(packet, 1, null);
             
             // Update source stats
             if (packet.src_name) {

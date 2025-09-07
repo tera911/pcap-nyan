@@ -41,10 +41,10 @@ export default class PlayerManager {
         // Add physics with small hitbox
         this.scene.physics.add.existing(this.nyancat);
         this.nyancat.body.setCollideWorldBounds(true);
-        this.nyancat.body.setCircle(8);  // Very small hitbox for bullet hell
+        this.nyancat.body.setCircle(4);  // Ultra small hitbox for bullet hell
         
         // Visual hitbox indicator
-        this.hitboxIndicator = this.scene.add.circle(400, 500, 8, 0xFF0000, 0.3);
+        this.hitboxIndicator = this.scene.add.circle(400, 500, 4, 0xFF0000, 0.3);
         this.hitboxIndicator.setStrokeStyle(1, 0xFF0000);
     }
     

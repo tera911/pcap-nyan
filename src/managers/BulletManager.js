@@ -254,8 +254,8 @@ export default class BulletManager {
                 break;
         }
         
-        // Apply difficulty scaling to speed (8% increase per level, more gradual)
-        vy = vy * (1 + (difficulty - 1) * 0.08);
+        // No longer apply difficulty scaling to speed
+        // Speed remains constant, difficulty comes from increased packet rate
         
         // Create the bullet with additional info
         const bulletData = { x, y, vx, vy, protocol, size, port, src_ip, dst_ip, src_name, bulletColor, tcp_flags, specialPattern, ipType, src_port, dst_port };
@@ -301,22 +301,39 @@ export default class BulletManager {
         let gravityScale = 1;
         let fragmentOnMTU = false;
         
-        if (size < 100) {
-            // Small control packets - fast and small
-            bulletRadius = 3;
-            gravityScale = 0.5; // Less gravity effect
-        } else if (size < 500) {
+        if (size < 64) {
+            // Tiny control packets (ACK, SYN, etc)
+            bulletRadius = 2;
+            gravityScale = 0.3;
+        } else if (size < 128) {
+            // Small control packets
+            bulletRadius = 4;
+            gravityScale = 0.5;
+        } else if (size < 256) {
+            // Medium control packets
+            bulletRadius = 6;
+            gravityScale = 0.7;
+        } else if (size < 512) {
             // Normal data packets
-            bulletRadius = 5;
-            gravityScale = 1;
-        } else if (size < 1500) {
-            // Large packets
-            bulletRadius = 7;
-            gravityScale = 1.5; // More gravity effect
-        } else {
-            // MTU exceeded - will fragment
             bulletRadius = 9;
+            gravityScale = 1;
+        } else if (size < 1024) {
+            // Large data packets
+            bulletRadius = 12;
+            gravityScale = 1.3;
+        } else if (size < 1500) {
+            // Very large packets
+            bulletRadius = 15;
+            gravityScale = 1.6;
+        } else if (size < 4096) {
+            // Jumbo frames
+            bulletRadius = 18;
             gravityScale = 2;
+            fragmentOnMTU = true;
+        } else {
+            // Super jumbo packets
+            bulletRadius = 22;
+            gravityScale = 2.5;
             fragmentOnMTU = true;
         }
         

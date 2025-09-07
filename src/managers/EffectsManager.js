@@ -7,28 +7,12 @@ export default class EffectsManager {
     }
     
     createStarfield() {
+        // Starfield disabled for cleaner background
         this.stars = [];
-        for (let i = 0; i < 50; i++) {
-            const star = this.scene.add.circle(
-                Phaser.Math.Between(0, 800),
-                Phaser.Math.Between(0, 600),
-                Phaser.Math.Between(1, 3),
-                0xFFFFFF,
-                Phaser.Math.FloatBetween(0.3, 1)
-            );
-            star.speed = Phaser.Math.FloatBetween(1, 3);
-            this.stars.push(star);
-        }
     }
     
     updateStarfield() {
-        this.stars.forEach(star => {
-            star.y += star.speed;
-            if (star.y > 610) {
-                star.y = -10;
-                star.x = Phaser.Math.Between(0, 800);
-            }
-        });
+        // Starfield disabled
     }
     
     createLevelUpEffect(x, y, level) {
