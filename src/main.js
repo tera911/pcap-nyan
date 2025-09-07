@@ -8,8 +8,6 @@ const wsManager = new WebSocketManager();
 // Phaser game configuration
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
     parent: 'game',
     physics: {
         default: 'arcade',
@@ -25,8 +23,10 @@ const config = {
         roundPixels: true  // Round pixel positions for crisper rendering
     },
     scale: {
-        mode: Phaser.Scale.NONE,  // No automatic scaling
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        mode: Phaser.Scale.FIT,  // Fit to container
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1280,
+        height: 720
     }
 };
 

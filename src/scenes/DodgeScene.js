@@ -68,9 +68,16 @@ export default class DodgeScene extends Phaser.Scene {
         if (this.wsManager) {
             this.wsManager.setCallbacks({
                 onMapUpdate: (packets) => this.createPacketBullets(packets),
-                onGameState: (state) => this.sourceManager.updateCaptureSources(state)
+                onGameState: (state) => this.sourceManager.updateCaptureSources(state),
+                onConnectionStatusChange: (connected) => this.uiManager.updateConnectionStatus(connected),
+                onCaptureStatusChange: (capturing) => this.uiManager.updateCaptureStatus(capturing)
             });
             this.wsManager.requestMap();
+            
+            // Check initial connection status
+            if (this.wsManager.ws && this.wsManager.ws.readyState === WebSocket.OPEN) {
+                this.uiManager.updateConnectionStatus(true);
+            }
         }
         
         // Timers

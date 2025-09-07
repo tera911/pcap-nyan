@@ -18,28 +18,29 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 0;
+            overflow: hidden;
         }
         
-        h1 {
-            color: white;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
         
         #game-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         .controls {
             display: flex;
             gap: 20px;
-            margin-bottom: 20px;
             justify-content: center;
             flex-wrap: wrap;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
         }
         
         .status-panel {
@@ -109,9 +110,8 @@
         }
         
         #game {
-            border: 3px solid #333;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            height: 100%;
         }
         
         .info {
@@ -161,44 +161,10 @@
     </style>
 </head>
 <body>
-    <h1>🐱 Packet Capture Nyan Cat Dodge Game 🌈</h1>
-    
     <div id="game-container">
-        <div class="controls">
-            <div class="status-panel">
-                <div class="status-item">
-                    <label>Connection:</label>
-                    <span id="ws-status" class="status-indicator disconnected">Connecting...</span>
-                </div>
-                <div class="status-item">
-                    <label>Packets:</label>
-                    <span id="capture-status" class="status-indicator stopped">Waiting...</span>
-                </div>
-            </div>
-        </div>
-        
         <div id="game"></div>
     </div>
     
-    <div class="packet-stats" id="packet-stats">
-        <h3>📡 Packet Flow</h3>
-        <div class="stat-line">
-            <span>Status:</span>
-            <span id="packet-status" class="stopped">STOPPED</span>
-        </div>
-        <div class="stat-line">
-            <span>Total:</span>
-            <span id="packet-total">0</span>
-        </div>
-        <div class="stat-line">
-            <span>Rate:</span>
-            <span id="packet-rate">0/min</span>
-        </div>
-        <div class="stat-line">
-            <span>Obstacles:</span>
-            <span id="obstacle-count">0</span>
-        </div>
-    </div>
     
     <script type="module" src="/src/main.js"></script>
 </body>

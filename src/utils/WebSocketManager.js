@@ -7,7 +7,9 @@ export default class WebSocketManager {
             onDisconnected: null,
             onGameState: null,
             onPlayerEvent: null,
-            onLeaderboard: null
+            onLeaderboard: null,
+            onConnectionStatusChange: null,
+            onCaptureStatusChange: null
         };
         this.packetStats = {
             count: 0,
@@ -43,6 +45,10 @@ export default class WebSocketManager {
             
             if (this.callbacks.onConnected) {
                 this.callbacks.onConnected();
+            }
+            
+            if (this.callbacks.onConnectionStatusChange) {
+                this.callbacks.onConnectionStatusChange(true);
             }
         };
         
@@ -86,6 +92,10 @@ export default class WebSocketManager {
                     };
                     
                     this.updatePacketStats();
+                    
+                    if (this.callbacks.onCaptureStatusChange) {
+                        this.callbacks.onCaptureStatusChange(activeSourceCount > 0);
+                    }
                     
                     if (this.callbacks.onMapUpdate) {
                         this.callbacks.onMapUpdate(obstacles);
@@ -161,6 +171,9 @@ export default class WebSocketManager {
             this.updateStatus('disconnected');
             if (this.callbacks.onDisconnected) {
                 this.callbacks.onDisconnected();
+            }
+            if (this.callbacks.onConnectionStatusChange) {
+                this.callbacks.onConnectionStatusChange(false);
             }
             setTimeout(() => this.connect(), 3000);
         };

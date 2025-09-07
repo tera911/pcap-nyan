@@ -31,6 +31,10 @@ export default class UIManager {
         // Packet classification stats
         this.packetStatsContainer = null;
         this.packetStatTexts = {};
+        
+        // Connection status
+        this.connectionStatusText = null;
+        this.captureStatusText = null;
     }
     
     create() {
@@ -43,6 +47,7 @@ export default class UIManager {
         this.createSourceStatsPanel();
         this.createGodModeIndicator();
         this.createBulletTypeLegend();
+        this.createConnectionStatus();
     }
     
     createGameUI() {
@@ -83,7 +88,7 @@ export default class UIManager {
         this.livesText.setAlpha(0.9);
         
         // Player Level display - moved down and semi-transparent
-        this.difficultyText = this.scene.add.text(400, 100, 'Lv.1', {
+        this.difficultyText = this.scene.add.text(640, 100, 'Lv.1', {
             fontSize: '24px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -96,7 +101,7 @@ export default class UIManager {
         // Removed level progress bar - using player level system instead
         
         // Packet info - moved down and semi-transparent
-        this.packetInfoText = this.scene.add.text(790, 90, 'Packets: 0', {
+        this.packetInfoText = this.scene.add.text(1264, 90, 'Packets: 0', {
             fontSize: '14px',
             color: '#00FF00',
             backgroundColor: 'rgba(0,0,0,0.3)',
@@ -108,7 +113,7 @@ export default class UIManager {
     
     createStartScreen() {
         // Start screen
-        this.startScreenText = this.scene.add.text(400, 250, 'PCAP NYAN', {
+        this.startScreenText = this.scene.add.text(640, 250, 'PCAP NYAN', {
             fontSize: '64px',
             color: '#FF69B4',
             fontStyle: 'bold',
@@ -118,7 +123,7 @@ export default class UIManager {
         this.startScreenText.setOrigin(0.5);
         this.startScreenText.setVisible(false);
         
-        this.startInstructionText = this.scene.add.text(400, 350, 'Press SPACE to Start\n\n← → ↑ ↓: Move | Shift: Slow | P: Pause | G: God | H: Help', {
+        this.startInstructionText = this.scene.add.text(640, 350, 'Press SPACE to Start\n\n← → ↑ ↓: Move | Shift: Slow | P: Pause | G: God | H: Help', {
             fontSize: '20px',
             color: '#FFFFFF',
             backgroundColor: 'rgba(0,0,0,0.7)',
@@ -131,7 +136,7 @@ export default class UIManager {
     
     createGameOverScreen() {
         // Game over text
-        this.gameOverText = this.scene.add.text(400, 300, 'GAME OVER\nPress R to restart', {
+        this.gameOverText = this.scene.add.text(640, 300, 'GAME OVER\nPress R to restart', {
             fontSize: '48px',
             color: '#FF0000',
             align: 'center',
@@ -144,7 +149,7 @@ export default class UIManager {
     
     createPauseScreen() {
         // Pause screen
-        this.pauseScreenText = this.scene.add.text(400, 250, 'PAUSED', {
+        this.pauseScreenText = this.scene.add.text(640, 250, 'PAUSED', {
             fontSize: '48px',
             color: '#FFFF00',
             fontStyle: 'bold',
@@ -177,7 +182,7 @@ export default class UIManager {
     
     createPacketStatsDisplay() {
         // Packet classification statistics at top
-        this.packetStatsContainer = this.scene.add.container(400, 16);
+        this.packetStatsContainer = this.scene.add.container(640, 16);
         
         // Background panel
         const statsBg = this.scene.add.rectangle(0, 0, 700, 60, 0x000000, 0.4);
@@ -231,7 +236,7 @@ export default class UIManager {
     
     createSourceStatsPanel() {
         // Source statistics panel - moved down and semi-transparent
-        this.sourceStatsContainer = this.scene.add.container(790, 120);
+        this.sourceStatsContainer = this.scene.add.container(1264, 120);
         this.sourceStatsTitle = this.scene.add.text(0, 0, '=== Sources ===', {
             fontSize: '11px',
             color: '#FFD700',
@@ -260,7 +265,7 @@ export default class UIManager {
     
     createGodModeIndicator() {
         // God mode indicator - moved down to avoid host circles
-        this.godModeText = this.scene.add.text(400, 130, '⚡ GOD MODE ⚡', {
+        this.godModeText = this.scene.add.text(640, 130, '⚡ GOD MODE ⚡', {
             fontSize: '18px',
             color: '#FFD700',
             fontStyle: 'bold',
@@ -363,7 +368,7 @@ export default class UIManager {
     
     createBulletTypeLegend() {
         // Create collapsible legend container
-        this.legendContainer = this.scene.add.container(400, 450);
+        this.legendContainer = this.scene.add.container(640, 500);
         
         // Background for legend
         const legendBg = this.scene.add.rectangle(0, 0, 350, 140, 0x000000, 0.7);
@@ -588,5 +593,53 @@ export default class UIManager {
         // Hide overlays
         this.hideGameOver();
         this.setGodModeVisible(false);
+    }
+    
+    createConnectionStatus() {
+        // Connection status display in bottom right
+        const bottomY = 680;
+        const rightX = 1260;
+        
+        // WebSocket connection status
+        this.connectionStatusText = this.scene.add.text(rightX, bottomY - 40, 'Connection: Disconnected', {
+            fontSize: '12px',
+            color: '#FF6666',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            padding: { x: 8, y: 4 }
+        });
+        this.connectionStatusText.setOrigin(1, 1);
+        
+        // Packet capture status
+        this.captureStatusText = this.scene.add.text(rightX, bottomY - 15, 'Capture: Waiting', {
+            fontSize: '12px',
+            color: '#999999',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            padding: { x: 8, y: 4 }
+        });
+        this.captureStatusText.setOrigin(1, 1);
+    }
+    
+    updateConnectionStatus(connected) {
+        if (this.connectionStatusText) {
+            if (connected) {
+                this.connectionStatusText.setText('Connection: Connected');
+                this.connectionStatusText.setColor('#66FF66');
+            } else {
+                this.connectionStatusText.setText('Connection: Disconnected');
+                this.connectionStatusText.setColor('#FF6666');
+            }
+        }
+    }
+    
+    updateCaptureStatus(capturing) {
+        if (this.captureStatusText) {
+            if (capturing) {
+                this.captureStatusText.setText('Capture: Active');
+                this.captureStatusText.setColor('#FFD700');
+            } else {
+                this.captureStatusText.setText('Capture: Waiting');
+                this.captureStatusText.setColor('#999999');
+            }
+        }
     }
 }
