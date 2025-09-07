@@ -218,14 +218,19 @@ export default class DodgeScene extends Phaser.Scene {
         if (this.gameOver || !packetData || !Array.isArray(packetData)) return;
         
         const currentTime = this.time.now;
-        // Remove packet interval restriction - let backend control the rate
-        // if (currentTime - this.lastPacketTime < this.packetInterval) return;
         
-        // Process all packets from backend (backend already controls the rate)
-        // Don't slice - backend already limits the batch size
-        const packetsToProcess = packetData;
+        // Dynamic packet interval based on player level (shorter interval = more packets)
+        const playerLevel = this.playerManager.playerLevel;
+        const levelInterval = Math.max(200, 1000 - (playerLevel * 50)); // 1000ms at level 1, down to 200ms at higher levels
         
-        // Process each packet immediately (backend already controls timing)
+        // Check if enough time has passed since last packet processing
+        if (currentTime - this.lastPacketTime < levelInterval) return;
+        
+        // Limit packets based on level (more packets at higher levels)
+        const maxPackets = Math.min(3 + Math.floor(playerLevel * 1.2), 15); // Start with fewer packets, max 15 for balance
+        const packetsToProcess = packetData.slice(0, maxPackets);
+        
+        // Process each packet
         packetsToProcess.forEach((packet, index) => {
             // Get source position if available
             let sourcePos = null;
@@ -345,7 +350,11 @@ export default class DodgeScene extends Phaser.Scene {
             
             // Show pause indicator
             this.uiManager.showPauseScreen();
-            this.uiManager.addSystemLog('GAME PAUSED - Press P to resume');
+            this.uiManager.addSystemLog('GAME PAUSED - Press P to resume | Click bullets for details');
+            
+            // Show bullet labels and enable interactive mode when paused
+            this.bulletManager.setLabelsVisible(true);
+            this.bulletManager.enableInteractiveMode(true);
             
             // Stop time counting
             if (this.gameStarted) {
@@ -358,6 +367,10 @@ export default class DodgeScene extends Phaser.Scene {
             // Hide pause indicator
             this.uiManager.hidePauseScreen();
             this.uiManager.addSystemLog('GAME RESUMED');
+            
+            // Hide bullet labels and disable interactive mode when resumed
+            this.bulletManager.setLabelsVisible(false);
+            this.bulletManager.enableInteractiveMode(false);
             
             // Adjust start time to account for pause duration
             if (this.gameStarted && this.pauseStartTime) {

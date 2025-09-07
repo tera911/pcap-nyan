@@ -6,6 +6,9 @@ export default class BulletManager {
         this.bulletGroup = null;
         this.dodgedBullets = 0;
         this.grazeCount = 0;
+        this.selectedBullet = null;
+        this.detailPanel = null;
+        this.detailText = null;
         
         // Packet classification counters
         this.packetStats = {
@@ -30,6 +33,38 @@ export default class BulletManager {
             maxSize: 500,
             runChildUpdate: true
         });
+        
+        // Create detail panel (hidden by default)
+        this.createDetailPanel();
+    }
+    
+    createDetailPanel() {
+        // Background panel for details
+        this.detailPanel = this.scene.add.rectangle(400, 300, 400, 250, 0x000000, 0.95);
+        this.detailPanel.setStrokeStyle(3, 0xFFD700);
+        this.detailPanel.setDepth(100);
+        this.detailPanel.setVisible(false);
+        
+        // Detail text
+        this.detailText = this.scene.add.text(400, 300, '', {
+            fontSize: '14px',
+            color: '#FFFFFF',
+            align: 'left',
+            lineSpacing: 5
+        });
+        this.detailText.setOrigin(0.5);
+        this.detailText.setDepth(101);
+        this.detailText.setVisible(false);
+        
+        // Close button text
+        this.closeText = this.scene.add.text(400, 410, '[Click anywhere to close]', {
+            fontSize: '12px',
+            color: '#FFD700',
+            align: 'center'
+        });
+        this.closeText.setOrigin(0.5);
+        this.closeText.setDepth(101);
+        this.closeText.setVisible(false);
     }
     
     createPacketBullet(packet, difficulty = 1, targetX = null) {
@@ -223,13 +258,13 @@ export default class BulletManager {
         vy = vy * (1 + (difficulty - 1) * 0.08);
         
         // Create the bullet with additional info
-        const bulletData = { x, y, vx, vy, protocol, size, port, src_ip, src_name, bulletColor, tcp_flags, specialPattern, ipType, src_port, dst_port };
+        const bulletData = { x, y, vx, vy, protocol, size, port, src_ip, dst_ip, src_name, bulletColor, tcp_flags, specialPattern, ipType, src_port, dst_port };
         this.createBulletWithInfo(bulletData);
     }
     
     createBulletWithInfo(bulletData) {
         // Destructure bullet data
-        const { x, y, vx, vy, protocol, size, port, src_ip: source, src_name: sourceName, 
+        const { x, y, vx, vy, protocol, size, port, src_ip, dst_ip, src_name: sourceName, 
                 bulletColor, tcp_flags, specialPattern, ipType, src_port, dst_port } = bulletData;
         
         // Set bullet color
@@ -323,18 +358,7 @@ export default class BulletManager {
             bullet.setStrokeStyle(1, 0xFFFFFF);
         }
         
-        // Add source indicator if available (extremely transparent)
-        if (sourceName && sourceName !== 'Unknown') {
-            const sourceLabel = this.scene.add.text(x, y - 25, sourceName.substring(0, 8), {
-                fontSize: '5px',
-                color: '#FFD700',
-                backgroundColor: 'rgba(0,0,0,0.05)',  // Almost invisible
-                padding: { x: 0, y: 0 }
-            });
-            sourceLabel.setOrigin(0.5);
-            sourceLabel.setAlpha(0.15);  // Extremely transparent (was 0.3)
-            bullet.sourceLabel = sourceLabel;
-        }
+        // Source label removed - details available via click instead
         
         // No port number label anymore
         // const label = this.scene.add.text(x, y, `${port}`, {
@@ -472,30 +496,31 @@ export default class BulletManager {
             }
         }
         
-        // Add the service label with port number (extremely transparent)
+        // Add the service label (hidden by default, shown when paused)
         if (serviceText && serviceText !== 'Unknown') {
-            // Add port number to service text
-            const labelText = `${serviceText}:${port}`;
+            // Simple label with just the service name
+            const labelText = serviceText;
             
             const typeLabel = this.scene.add.text(x, y - 15, labelText, {
-                fontSize: '8px',  // Even smaller
-                color: '#FFD700',
-                fontStyle: 'normal',
-                backgroundColor: 'rgba(0,0,0,0.1)',  // Almost invisible background
-                padding: { x: 1, y: 0 },
-                stroke: '#000000',
-                strokeThickness: 0.3  // Very thin stroke
+                fontSize: '12px',  // Reduced by 2px from 14px
+                color: '#FFFFFF',
+                fontStyle: 'bold',
+                backgroundColor: '#000000',  // Solid black background
+                padding: { x: 4, y: 2 },
+                align: 'center',
+                stroke: '#FFFFFF',  // White border for visibility
+                strokeThickness: 0
             });
             typeLabel.setOrigin(0.5);
             typeLabel.setDepth(10);
-            typeLabel.setAlpha(0.25);  // Very transparent (was 0.4)
+            typeLabel.setVisible(false);  // Hidden by default
             bullet.typeLabel = typeLabel;
         }
         
         // Store references
         // bullet.label = label;  // No label anymore
         bullet.port = port;
-        bullet.source = source;
+        bullet.source = src_ip;
         bullet.sourceName = sourceName;
         bullet.protocol = protocol;
         bullet.specialPattern = specialPattern;
@@ -504,6 +529,23 @@ export default class BulletManager {
         bullet.gravityScale = gravityScale;
         bullet.fragmentOnMTU = fragmentOnMTU;
         bullet.size = size;
+        
+        // Store all packet info for detail display
+        bullet.packetInfo = {
+            protocol: protocol,
+            src_ip: src_ip || 'unknown',
+            dst_ip: dst_ip || 'unknown',
+            src_port: src_port || 0,
+            dst_port: dst_port || 0,
+            size: size,
+            service: serviceText || 'Unknown',
+            source_name: sourceName || 'Unknown',
+            tcp_flags: tcp_flags,
+            special_pattern: specialPattern,
+            ip_type: ipType
+        };
+        
+        // Don't make interactive here - will be done when paused
         
         // Add to physics group
         this.bulletGroup.add(bullet);
@@ -636,7 +678,7 @@ export default class BulletManager {
                 }
                 // Destroy original oversized packet
                 // if (bullet.label) bullet.label.destroy();  // No port label anymore
-                if (bullet.sourceLabel) bullet.sourceLabel.destroy();
+                // if (bullet.sourceLabel) bullet.sourceLabel.destroy();  // No source label anymore
                 if (bullet.typeLabel) bullet.typeLabel.destroy();
                 if (bullet.trail) bullet.trail.destroy();
                 bullet.destroy();
@@ -719,9 +761,9 @@ export default class BulletManager {
                 // if (bullet.label) {  // No port label anymore
                 //     bullet.label.destroy();
                 // }
-                if (bullet.sourceLabel) {
-                    bullet.sourceLabel.destroy();
-                }
+                // if (bullet.sourceLabel) {  // No source label anymore
+                //     bullet.sourceLabel.destroy();
+                // }
                 if (bullet.typeLabel) {
                     bullet.typeLabel.destroy();
                 }
@@ -762,9 +804,9 @@ export default class BulletManager {
             // if (bullet.label) {  // No port label anymore
             //     bullet.label.destroy();
             // }
-            if (bullet.sourceLabel) {
-                bullet.sourceLabel.destroy();
-            }
+            // if (bullet.sourceLabel) {  // No source label anymore
+            //     bullet.sourceLabel.destroy();
+            // }
             if (bullet.typeLabel) {
                 bullet.typeLabel.destroy();
             }
@@ -859,5 +901,129 @@ export default class BulletManager {
     
     getPacketStats() {
         return this.packetStats;
+    }
+    
+    setLabelsVisible(visible) {
+        // Toggle visibility of service type labels only
+        this.bulletGroup.children.entries.forEach(bullet => {
+            // Source label no longer exists
+            if (bullet.typeLabel) {
+                bullet.typeLabel.setVisible(visible);
+            }
+        });
+    }
+    
+    enableInteractiveMode(enabled) {
+        // Enable/disable click detection on bullets
+        this.bulletGroup.children.entries.forEach(bullet => {
+            if (enabled) {
+                // Ensure bullet is interactive
+                if (!bullet.input) {
+                    bullet.setInteractive({ useHandCursor: true });
+                }
+                // Add click handler if not already added
+                if (!bullet.hasClickHandler) {
+                    bullet.on('pointerdown', () => this.showBulletDetails(bullet));
+                    bullet.hasClickHandler = true;
+                }
+            } else {
+                // Remove interactivity when not paused
+                if (bullet.input) {
+                    bullet.removeInteractive();
+                }
+                bullet.removeAllListeners('pointerdown');
+                bullet.hasClickHandler = false;
+            }
+        });
+        
+        // If disabling, also hide detail panel
+        if (!enabled) {
+            this.hideDetailPanel();
+        }
+    }
+    
+    showBulletDetails(bullet) {
+        if (!bullet.packetInfo) return;
+        
+        // Prevent opening if panel is already open
+        if (this.detailPanel.visible) {
+            this.hideDetailPanel();
+            return;
+        }
+        
+        const info = bullet.packetInfo;
+        const detailText = [
+            `═══ PACKET DETAILS ═══`,
+            ``,
+            `Protocol: ${info.protocol}`,
+            `Service: ${info.service}`,
+            ``,
+            `Source IP: ${info.src_ip}`,
+            `Source Port: ${info.src_port}`,
+            `Dest IP: ${info.dst_ip}`,
+            `Dest Port: ${info.dst_port}`,
+            ``,
+            `Packet Size: ${info.size} bytes`,
+            `Source Name: ${info.source_name}`,
+            `IP Type: ${info.ip_type || 'Global'}`,
+            info.tcp_flags ? `TCP Flags: ${info.tcp_flags.join(', ')}` : '',
+            info.special_pattern ? `Pattern: ${info.special_pattern}` : ''
+        ].filter(line => line).join('\n');
+        
+        this.detailText.setText(detailText);
+        this.detailPanel.setVisible(true);
+        this.detailText.setVisible(true);
+        this.closeText.setVisible(true);
+        
+        // Highlight selected bullet
+        if (this.selectedBullet && this.selectedBullet !== bullet) {
+            this.selectedBullet.setStrokeStyle(this.selectedBullet.oldStroke || 1, this.selectedBullet.oldStrokeColor || 0xFFFFFF);
+        }
+        bullet.oldStroke = bullet.strokeWidth || 1;
+        bullet.oldStrokeColor = bullet.strokeColor || 0xFFFFFF;
+        bullet.setStrokeStyle(4, 0xFFD700);
+        this.selectedBullet = bullet;
+        
+        // Add click handler to close panel (with small delay to prevent immediate close)
+        this.scene.time.delayedCall(100, () => {
+            this.scene.input.once('pointerdown', () => this.hideDetailPanel());
+        });
+    }
+    
+    hideDetailPanel() {
+        this.detailPanel.setVisible(false);
+        this.detailText.setVisible(false);
+        this.closeText.setVisible(false);
+        
+        // Remove highlight from selected bullet
+        if (this.selectedBullet && this.selectedBullet.active) {
+            this.selectedBullet.setStrokeStyle(
+                this.selectedBullet.oldStroke || 1, 
+                this.selectedBullet.oldStrokeColor || 0xFFFFFF
+            );
+        }
+        this.selectedBullet = null;
+    }
+    
+    reset() {
+        this.clearAllBullets();
+        this.dodgedBullets = 0;
+        this.grazeCount = 0;
+        
+        // Reset packet stats
+        this.packetStats = {
+            tcp: 0,
+            udp: 0,
+            icmp: 0,
+            total: 0,
+            http: 0,
+            ssh: 0,
+            dns: 0,
+            wellknown: 0,
+            ephemeral: 0,
+            private: 0,
+            broadcast: 0,
+            loopback: 0
+        };
     }
 }

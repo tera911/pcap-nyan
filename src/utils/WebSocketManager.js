@@ -61,14 +61,15 @@ export default class WebSocketManager {
                         x_percent: (bullet.x / 800) * 100, // Convert to percentage
                         size: bullet.size * 10, // Adjust size
                         protocol: bullet.protocol,
-                        src_ip: bullet.source,
-                        dst_ip: '',
-                        src_port: bullet.port,
-                        dst_port: bullet.port,
+                        src_ip: bullet.src_ip || bullet.source,  // Use actual IP if available
+                        dst_ip: bullet.dst_ip || '',
+                        src_port: bullet.src_port || bullet.port,
+                        dst_port: bullet.dst_port || bullet.port,
                         age: 0,
                         game_port: bullet.port,
                         source: bullet.source,
                         source_name: bullet.source_name,
+                        src_name: bullet.src_name || bullet.source_name,  // Add src_name for label
                         source_id: bullet.source_id || bullet.source, // Add source_id for spawn position
                         color: bullet.color
                     }));

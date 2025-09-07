@@ -67,6 +67,11 @@ class Bullet:
     source: str
     port: int
     color: str
+    src_ip: str = ''
+    dst_ip: str = ''
+    src_port: int = 0
+    dst_port: int = 0
+    src_name: str = ''
     created_at: float = field(default_factory=time.time)
 
 @dataclass
@@ -363,7 +368,12 @@ class HubServer:
                 protocol=protocol,
                 source=client.source_id,
                 port=port,
-                color=colors.get(protocol, '#FFFFFF')
+                color=colors.get(protocol, '#FFFFFF'),
+                src_ip=packet.get('src_ip', ''),
+                dst_ip=packet.get('dst_ip', ''),
+                src_port=packet.get('src_port', 0),
+                dst_port=packet.get('dst_port', 0),
+                src_name=client.source_name
             )
             
             new_bullets.append(bullet)
@@ -438,7 +448,12 @@ class HubServer:
                 'source': b.source,
                 'source_name': self.capture_clients[next((k for k, v in self.capture_clients.items() if v.source_id == b.source), '')].source_name if b.source in [c.source_id for c in self.capture_clients.values()] else 'Unknown',
                 'port': b.port,
-                'color': b.color
+                'color': b.color,
+                'src_ip': b.src_ip,
+                'dst_ip': b.dst_ip,
+                'src_port': b.src_port,
+                'dst_port': b.dst_port,
+                'src_name': b.src_name
             }
             for b in self.bullets
         ]

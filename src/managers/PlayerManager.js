@@ -80,9 +80,9 @@ export default class PlayerManager {
     
     createGrazeArea() {
         // Graze detection area (larger than hitbox)
-        this.grazeArea = this.scene.add.circle(400, 500, 40);
+        this.grazeArea = this.scene.add.circle(400, 500, 60);
         this.scene.physics.add.existing(this.grazeArea);
-        this.grazeArea.body.setCircle(40);
+        this.grazeArea.body.setCircle(60);
     }
     
     updateMovement(cursors, shiftKey) {
