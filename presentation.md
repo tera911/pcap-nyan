@@ -12,7 +12,7 @@ git clone https://github.com/tera911/pcap-nyan
 cd pcap-nyan
 
 brew install uv #python package manager
-uv run python packet_capture_client.py
+uv run python3 packet_capture_client.py
 
 ```
 
