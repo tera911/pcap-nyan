@@ -1,0 +1,23 @@
+{
+  "name": "pcap-nyan",
+  "version": "1.0.0",
+  "description": "リアルタイムパケットキャプチャーを使用してゲームマップを生成するNyan Catゲームです！",
+  "main": "game.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "python3 packet_capture.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "vite": "^7.1.4"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  }
+}
