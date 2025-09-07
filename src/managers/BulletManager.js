@@ -139,10 +139,10 @@ export default class BulletManager {
             // Default port-based positioning
             if (port <= 1023) {
                 // Well-known ports get special positions
-                x = 100 + ((port / 1023) * 600);
+                x = 100 + ((port / 1023) * 1080);  // Use most of screen width (100-1180)
             } else {
                 const normalizedPort = ((port - 1024) / (65535 - 1024));
-                x = targetX !== null ? targetX : 100 + (normalizedPort * 600);
+                x = targetX !== null ? targetX : 100 + (normalizedPort * 1080);  // Use most of screen width
             }
             y = -20;
         }
@@ -176,7 +176,7 @@ export default class BulletManager {
                     break;
                 case 'pulling':
                     vy = 100;
-                    vx = (400 - x) * 0.4; // Stronger pull toward center (increased from 0.2)
+                    vx = (640 - x) * 0.4; // Stronger pull toward center (640 is screen center)
                     break;
                 case 'spreading':
                     vx = (Math.random() - 0.5) * 350; // Wider random spread (increased from 200)
@@ -765,10 +765,10 @@ export default class BulletManager {
                 }
             }
             
-            // Remove off-screen bullets (tighter margins for performance)
-            if (bullet.y > 620 || bullet.x < -30 || bullet.x > 830) {
+            // Remove off-screen bullets (adjusted for 1280px width)
+            if (bullet.y > 750 || bullet.x < -30 || bullet.x > 1310) {
                 // Count as dodged if game is active
-                if (gameStarted && !gameOver && bullet.y > 620 && !bullet.counted) {
+                if (gameStarted && !gameOver && bullet.y > 750 && !bullet.counted) {
                     bulletsDodged++;
                     this.dodgedBullets++;
                     bullet.counted = true;

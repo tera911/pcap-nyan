@@ -123,7 +123,7 @@ export default class UIManager {
         this.startScreenText.setOrigin(0.5);
         this.startScreenText.setVisible(false);
         
-        this.startInstructionText = this.scene.add.text(640, 350, 'Press SPACE to Start\n\n← → ↑ ↓: Move | Shift: Slow | P: Pause | G: God | H: Help', {
+        this.startInstructionText = this.scene.add.text(640, 350, 'Press SPACE to Start\n\n← → ↑ ↓: Move | Shift: Boost | P: Pause | G: God | H: Help', {
             fontSize: '20px',
             color: '#FFFFFF',
             backgroundColor: 'rgba(0,0,0,0.7)',

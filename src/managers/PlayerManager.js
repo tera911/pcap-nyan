@@ -41,8 +41,8 @@ export default class PlayerManager {
     }
     
     createNyanCat() {
-        // Create nyan cat sprite
-        this.nyancat = this.scene.add.image(400, 500, 'nyancat');
+        // Create nyan cat sprite (centered on screen)
+        this.nyancat = this.scene.add.image(640, 500, 'nyancat');
         this.nyancat.setScale(0.6);
         
         // Add physics with small hitbox
@@ -51,7 +51,7 @@ export default class PlayerManager {
         this.nyancat.body.setCircle(4);  // Ultra small hitbox for bullet hell
         
         // Visual hitbox indicator
-        this.hitboxIndicator = this.scene.add.circle(400, 500, 4, 0xFF0000, 0.3);
+        this.hitboxIndicator = this.scene.add.circle(640, 500, 4, 0xFF0000, 0.3);
         this.hitboxIndicator.setStrokeStyle(1, 0xFF0000);
     }
     
@@ -80,30 +80,43 @@ export default class PlayerManager {
     
     createGodModeAura() {
         // God mode visual effect
-        this.godModeAura = this.scene.add.circle(400, 500, 25, 0xFFD700, 0);
+        this.godModeAura = this.scene.add.circle(640, 500, 25, 0xFFD700, 0);
         this.godModeAura.setStrokeStyle(3, 0xFFD700, 0.8);
         this.godModeAura.setVisible(false);
     }
     
     createGrazeArea() {
         // Graze detection area (larger than hitbox)
-        this.grazeArea = this.scene.add.circle(400, 500, 60);
+        this.grazeArea = this.scene.add.circle(640, 500, 60);
         this.scene.physics.add.existing(this.grazeArea);
         this.grazeArea.body.setCircle(60);
     }
     
     updateMovement(cursors, shiftKey) {
         const baseSpeed = 200;
-        const slowSpeed = 80;  // Slow mode for precise dodging
-        const speed = shiftKey.isDown ? slowSpeed : baseSpeed;
+        const boostSpeed = 350;  // Boost mode for quick escapes
+        const speed = shiftKey.isDown ? boostSpeed : baseSpeed;
         
-        // ホストサークルのY座標 + 50px の制限
-        const minY = 100;  // Host circles are at y=50, so minimum player Y is 100
+        // 移動範囲の制限 (弾幕が生成される範囲内)
+        const minY = 180;  // 上限を180pxに設定
+        const maxY = 520;  // 下限を520pxに設定 (720 - 200)
+        const minX = 180;  // 左端を180pxに設定
+        const maxX = 1100; // 右端を1100pxに設定
         
         if (cursors.left.isDown) {
-            this.nyancat.body.setVelocityX(-speed);
+            if (this.nyancat.x > minX) {
+                this.nyancat.body.setVelocityX(-speed);
+            } else {
+                this.nyancat.body.setVelocityX(0);
+                this.nyancat.x = minX;
+            }
         } else if (cursors.right.isDown) {
-            this.nyancat.body.setVelocityX(speed);
+            if (this.nyancat.x < maxX) {
+                this.nyancat.body.setVelocityX(speed);
+            } else {
+                this.nyancat.body.setVelocityX(0);
+                this.nyancat.x = maxX;
+            }
         } else {
             this.nyancat.body.setVelocityX(0);
         }
@@ -117,7 +130,13 @@ export default class PlayerManager {
                 this.nyancat.y = minY;  // 境界で停止
             }
         } else if (cursors.down.isDown) {
-            this.nyancat.body.setVelocityY(speed);
+            // 下方向の移動も制限
+            if (this.nyancat.y < maxY) {
+                this.nyancat.body.setVelocityY(speed);
+            } else {
+                this.nyancat.body.setVelocityY(0);
+                this.nyancat.y = maxY;  // 境界で停止
+            }
         } else {
             this.nyancat.body.setVelocityY(0);
         }
@@ -299,8 +318,8 @@ export default class PlayerManager {
     }
     
     reset() {
-        // Reset position
-        this.nyancat.x = 400;
+        // Reset position (centered on screen)
+        this.nyancat.x = 640;
         this.nyancat.y = 500;
         this.nyancat.body.setVelocity(0, 0);
         

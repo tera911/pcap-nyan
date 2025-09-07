@@ -88,6 +88,9 @@ export default class DodgeScene extends Phaser.Scene {
     }
     
     setupPhysics() {
+        // Set world bounds to match 1280x720 screen
+        this.physics.world.setBounds(0, 0, 1280, 720);
+        
         // Collision detection between player and bullets
         this.physics.add.overlap(
             this.playerManager.nyancat,
