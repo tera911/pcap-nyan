@@ -51,7 +51,7 @@ export default class SourceManager {
     
     createSourceCircle(sourceId, sourceName, ipAddress = null) {
         // Position sources in a rotating circle
-        const centerX = 400;
+        const centerX = 640;  // Center of 1280 width screen
         const centerY = 50;
         const radiusX = 300; // Horizontal radius
         const radiusY = 35;  // Vertical radius for ellipse
@@ -164,7 +164,7 @@ export default class SourceManager {
             x: x,
             y: y,
             baseAngle: baseAngle, // Store base angle for rotation
-            centerX: 400,
+            centerX: 640,
             centerY: 50,
             radiusX: 300,
             radiusY: 35
